@@ -1,2 +1,2 @@
 # Frontend
-This is the backend for my website CV project: https://github.com/SmileyFace799/websiteCV
+The frontend for this project can be found here: https://github.com/SmileyFace799/websiteCV
