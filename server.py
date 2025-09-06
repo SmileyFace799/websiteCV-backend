@@ -17,15 +17,12 @@ CORS(app, resources={r"/*": {
 
 DEBUG = True
 
+def check_valid(key: str) -> bool:
+    if not key: return False
 
-# Define a route
-@app.route('/confidential', methods=['GET'])
-def confidential():
-    request_key = request.headers.get("X-API-key")
+    keyIsValid = False
     forRemoval = []
-    response = (jsonify({'error': 'Unauthorized'}), 401)
     with open("secretData/keys.json", "r+") as keysFile:
-        keyIsValid = False
         portalocker.lock(keysFile, LOCK_EX)
         try:
             keys = json.load(keysFile)
@@ -34,19 +31,33 @@ def confidential():
                 if (dt.now() >= dt.fromisoformat(keys[i]["expiry"])):
                     forRemoval.insert(0, i)
                 else:
-                    keyIsValid = request_key == keys[i]["key"]
+                    keyIsValid = key == keys[i]["key"]
                 i += 1
         finally:
             portalocker.unlock(keysFile)
-            if keyIsValid:
-                with open("secretData/lang.json", "r") as f:
-                    response = jsonify(result=json.load(f))
+
     if forRemoval:
+        for i in forRemoval:
+            keys.pop(i)
         with open("secretData/keys.json", "w") as keysFile:
-            for i in forRemoval:
-                keys.pop(i)
-            keysFile.seek(0)
-            json.dump(keys, keysFile, indent=4)
+            portalocker.lock(keysFile, LOCK_EX)
+            try:
+                json.dump(keys, keysFile, indent=4)
+            finally:
+                portalocker.unlock(keysFile)
+    
+    return keyIsValid
+
+@app.route('/assertValid', methods=['GET'])
+def assert_valid():
+    return jsonify(result={"valid": check_valid(request.headers.get("X-API-key"))})
+
+@app.route('/confidential', methods=['GET'])
+def confidential():
+    response = (jsonify({'error': 'Unauthorized'}), 401)
+    if check_valid(request.headers.get("X-API-key")):
+        with open("secretData/lang.json", "r") as f:
+            response = jsonify(result=json.load(f))
     return response
 
 if __name__ == '__main__':
