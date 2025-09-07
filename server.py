@@ -1,5 +1,5 @@
 from datetime import datetime as dt
-from flask import Flask, jsonify, request
+from flask import Flask, jsonify, request, send_from_directory
 from flask_cors import CORS
 from waitress import serve
 from portalocker import portalocker, LOCK_EX
@@ -59,6 +59,12 @@ def confidential():
         with open("secretData/lang.json", "r") as f:
             response = jsonify(result=json.load(f))
     return response
+
+@app.route('/confidential/image/png', methods=['GET'])
+def get_image():
+    filename = request.args.get('name') + ".png"
+    if check_valid(request.headers.get("X-API-key")):
+        return send_from_directory('secretData/imgs', filename)
 
 if __name__ == '__main__':
     if DEBUG:
