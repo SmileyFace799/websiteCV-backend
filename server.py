@@ -5,18 +5,16 @@ from waitress import serve
 from portalocker import portalocker, LOCK_EX
 import json
 
-# Create a Flask app
 app = Flask(__name__)
-CORS(app, resources={r"/*": {
-    "origins": [
-        "http://localhost:5173",
-        "https://smiley-face.no/websiteCV"
-    ],
-    "allow_headers": ["X-API-key"]
-}})
 
-with open("debug.json", "r") as f:
-    DEBUG = json.load(f)
+with open("host_config.json", "r") as f:
+    config = json.load(f)
+    DEBUG = config["debug"]
+
+    CORS(app, resources={r"/*": {
+        "origins": config["origins"]["debug" if DEBUG else "production"],
+        "allow_headers": ["X-API-key"]
+    }})
 
 def check_valid(key: str) -> bool:
     if not key: return False
