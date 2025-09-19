@@ -15,7 +15,8 @@ CORS(app, resources={r"/*": {
     "allow_headers": ["X-API-key"]
 }})
 
-DEBUG = True
+with open("debug.json", "r") as f:
+    DEBUG = json.load(f)
 
 def check_valid(key: str) -> bool:
     if not key: return False
@@ -70,4 +71,5 @@ if __name__ == '__main__':
     if DEBUG:
         app.run(debug=True)
     else:
+        print("Running production server...")
         serve(app, host='0.0.0.0', port=8000)
