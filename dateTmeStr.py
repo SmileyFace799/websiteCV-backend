@@ -7,4 +7,4 @@ def toStr(date_time: dt) -> str:
 
 def fromStr(str_date_time) -> dt:
     year, month, day, hour, minute, second = str_date_time.split(":")
-    return dt(year, month, day, hour, minute, second)
+    return dt(int(year), int(month), int(day), int(hour), int(minute), int(second))
