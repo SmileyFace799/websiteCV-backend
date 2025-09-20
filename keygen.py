@@ -1,7 +1,8 @@
 from datetime import datetime as dt, timedelta as td
 from random import randint
-import json
 from portalocker import portalocker, LOCK_EX
+import json
+import dateTmeStr
 
 with open("secretData/key_info.json", "r") as f:
     KEY_INFO = json.load(f)
@@ -26,7 +27,7 @@ key = ''.join(KEY_INFO["chars"][randint(0, len(KEY_INFO["chars"]) - 1)] for _ in
 with open("secretData/keys.json", "r") as f:
     portalocker.lock(f, LOCK_EX)
     try:
-        newJson = json.load(f) + [{"key": key, "expiry": expiry.isoformat()}]
+        newJson = json.load(f) + [{"key": key, "expiry": dateTmeStr.toStr(expiry)}]
     finally:
         portalocker.unlock(f)
 with open("secretData/keys.json", "w") as f:

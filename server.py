@@ -4,6 +4,7 @@ from flask_cors import CORS
 from waitress import serve
 from portalocker import portalocker, LOCK_EX
 import json
+import dateTmeStr
 
 app = Flask(__name__)
 
@@ -27,7 +28,7 @@ def check_valid(key: str) -> bool:
             keys = json.load(keysFile)
             i = 0
             while not keyIsValid and i < len(keys):
-                if (dt.now() >= dt.fromisoformat(keys[i]["expiry"])):
+                if (dt.now() >= dateTmeStr.fromStr(keys[i]["expiry"])):
                     forRemoval.insert(0, i)
                 else:
                     keyIsValid = key == keys[i]["key"]
