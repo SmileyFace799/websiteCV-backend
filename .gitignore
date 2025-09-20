@@ -1,3 +1,4 @@
 .vscode/
 secretData/
 host_config.json
+__pycache__/
