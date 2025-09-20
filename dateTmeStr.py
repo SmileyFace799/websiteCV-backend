@@ -6,5 +6,5 @@ def toStr(date_time: dt) -> str:
     return f"{date_time.year}:{date_time.month}:{date_time.day}:{date_time.hour}:{date_time.minute}:{date_time.second}"
 
 def fromStr(str_date_time) -> dt:
-    year, month, day, hour, minute, second = str_date_time.split()
+    year, month, day, hour, minute, second = str_date_time.split(":")
     return dt(year, month, day, hour, minute, second)
