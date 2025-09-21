@@ -1,16 +1,25 @@
 from datetime import datetime as dt
 from flask import Flask, jsonify, request, send_from_directory
 from flask_cors import CORS
-from waitress import serve
+from cheroot.wsgi import Server as WSGIServer
+from cheroot.ssl.builtin import BuiltinSSLAdapter
 from portalocker import portalocker, LOCK_EX
+from os import _exit
+from time import sleep
 import json
 import dateTmeStr
 
 app = Flask(__name__)
+ssl_adapter = None
 
 with open("host_config.json", "r") as f:
     config = json.load(f)
     DEBUG = config["debug"]
+    if not DEBUG and "ssl" in config and "cert" in config["ssl"] and config["ssl"]["cert"] and "key" in config["ssl"] and config["ssl"]["key"]:
+        ssl_adapter = BuiltinSSLAdapter(
+            certificate=config["ssl"]["cert"],
+            private_key=config["ssl"]["key"]
+        )
 
     CORS(app, resources={r"/*": {
         "origins": config["origins"]["debug" if DEBUG else "production"],
@@ -70,5 +79,27 @@ if __name__ == '__main__':
     if DEBUG:
         app.run(debug=True)
     else:
-        print("Running production server...")
-        serve(app, host='0.0.0.0', port=8000)
+        print("Creating production server...")
+        server = WSGIServer(
+            bind_addr=('0.0.0.0', 8000),
+            wsgi_app=app
+        )
+        print("Server created!")
+        if ssl_adapter:
+            print("Adding SSL...")
+            server.ssl_adapter = ssl_adapter
+            print("SSL added!")
+        else:
+            print("No SSL info found, SSL skipped")
+        
+        try:
+            print("Starting production server...")
+            server.start()
+        except KeyboardInterrupt:
+            print("Shutting down server...")
+        finally:
+            server.stop()
+            sleep(1) # Give some time before the _exit()-signal is called
+            print("Server stopped")
+            _exit(0)
+            
